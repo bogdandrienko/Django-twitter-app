@@ -50,7 +50,6 @@ def register(request):
                 username=username,
                 password=make_password(password),
             )
-            time.sleep(1)
 
             return redirect(reverse('django_app:login', args=()))
         else:
@@ -63,7 +62,6 @@ def register(request):
 @django_utils.logging_txt_decorator
 def login_f(request):
     if request.method == "POST":
-        time.sleep(1)
 
         username = request.POST.get('username', "").strip()
         password = request.POST.get('password', "").strip()
@@ -100,7 +98,6 @@ def create(request):
             is_completed=False,
         )
 
-        time.sleep(1)
         return redirect(reverse("django_app:read_list", args=()))
     context = {}
 
@@ -111,9 +108,21 @@ def create(request):
 @django_utils.login_required_decorator
 def read(request, post_id=None):
     post = django_utils.caching(
-        LocMemCache, f"read django_models.PostModel.objects.get(id={post_id})", 1,
+        LocMemCache, f"read django_models.PostModel.objects.get(id={post_id})", 2,
         lambda: django_models.PostModel.objects.get(id=post_id)
     )
+
+    # _rating = django_models.PostRatingModel.objects.filter(post=post)
+    # _rating_dislikes = _rating.filter(is_like=False).count()
+    # _rating_likes = _rating.count() - _rating_dislikes
+    #
+    # _my_status = _rating.filter(user=request.user)
+    # if _my_status.count() < 1:
+    #     _my_status = 0
+    # else:
+    #     _my_status = 1 if _my_status[0].is_like is True else -1
+
+    # context = {"post": post, "dislikes": _rating_dislikes, "likes": _rating_likes, "status": _my_status}
 
     context = {"post": post}
 
@@ -122,9 +131,57 @@ def read(request, post_id=None):
 
 @django_utils.logging_txt_decorator
 @django_utils.login_required_decorator
+def rating_like(request, post_id=None):
+    post = django_models.PostModel.objects.get(id=post_id)
+    user = request.user
+
+    try:
+        _rating = django_models.PostRatingModel.objects.get(post=post, user=user)
+        like = _rating
+        if like.is_like is True:
+            like.delete()  # todo ЕСЛИ В БАЗЕ УЖЕ СТОИТ ЛАЙК
+        else:
+            like.is_like = True
+            like.save()  # todo ЕСЛИ В БАЗЕ УЖЕ СТОИТ ДИЗЛАЙК
+    except Exception as error:
+        django_models.PostRatingModel.objects.create(
+            user=user,
+            post=post,
+            is_like=True,
+        )  # todo ЕСЛИ В БАЗЕ НЕТУ ОТМЕТКИ
+
+    return redirect(reverse("django_app:read", args=(post_id,)))
+
+
+@django_utils.logging_txt_decorator
+@django_utils.login_required_decorator
+def rating_dislike(request, post_id=None):
+    post = django_models.PostModel.objects.get(id=post_id)
+    user = request.user
+
+    _rating = django_models.PostRatingModel.objects.filter(post=post, user=user)
+    if _rating.count() < 1:
+        django_models.PostRatingModel.objects.create(
+            user=user,
+            post=post,
+            is_like=False,
+        )  # todo ЕСЛИ В БАЗЕ НЕТУ ОТМЕТКИ
+    else:
+        like = _rating[0]
+        if like.is_like is True:
+            like.is_like = False
+            like.save()  # todo ЕСЛИ В БАЗЕ УЖЕ СТОИТ ЛАЙК
+        else:
+            like.delete()  # todo ЕСЛИ В БАЗЕ УЖЕ СТОИТ ДИЗЛАЙК
+
+    return redirect(reverse("django_app:read", args=(post_id,)))
+
+
+@django_utils.logging_txt_decorator
+@django_utils.login_required_decorator
 def read_list(request):
     post_list = django_utils.caching(
-        LocMemCache, f"read_list django_models.PostModel.objects.all()", 1,
+        LocMemCache, f"read_list django_models.PostModel.objects.all()", 2,
         lambda: django_models.PostModel.objects.all()
     )
 
@@ -163,7 +220,6 @@ def update(request, post_id=None):
         post.updated = timezone.now()
         post.save()
 
-        time.sleep(1)
         return redirect(reverse("django_app:read_list", args=()))
     post = django_models.PostModel.objects.get(id=post_id)
     context = {
@@ -176,8 +232,6 @@ def update(request, post_id=None):
 @django_utils.logging_txt_decorator
 @django_utils.login_required_decorator
 def delete(request, post_id=None):
-
     django_models.PostModel.objects.get(id=post_id).delete()
 
-    time.sleep(1)
     return redirect(reverse("django_app:read_list", args=()))

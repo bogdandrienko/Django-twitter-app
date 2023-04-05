@@ -81,6 +81,8 @@
                                         <a class="text-decoration-none text-dark" href="{% url 'django_app:read' post.id %}">
                                             <h5>{{ post.title|cut_string:30 }} [{{ post.author.username }}]</h5>
                                         </a>
+
+
                                         <form action="{% url 'django_app:update' post.id %}"
                                               method="POST"
                                               target="_self"
@@ -142,6 +144,23 @@
                                 <div class="d-flex justify-content-between m-0 p-1">
                                     <small class="text-warning m-1 p-0">
                                         {{ post.created }} [создано]
+                                    </small>
+                                    <small class="">
+                                        {% post_my_rating post.id as my_like %}
+                                        <i
+                                            {% if my_like == 1 %}
+                                                class="fa-solid fa-heart m-1 p-1 text-success"
+                                            {% else %}
+                                                class="fa-regular fa-heart m-1 p-1 text-success"
+                                            {% endif %}
+                                        > {{ post.post_ratings.likes }} </i>
+                                        <i
+                                            {% if my_like == -1 %}
+                                                class="fa-solid fa-heart m-1 p-1 text-danger"
+                                            {% else %}
+                                                class="fa-regular fa-heart m-1 p-1 text-danger"
+                                            {% endif %}
+                                        > {{ post.post_ratings.dislikes }} </i>
                                     </small>
                                     <small class="text-success m-1 p-0">
                                         {{ post.updated }} [обновлено]

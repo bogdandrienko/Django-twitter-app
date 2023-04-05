@@ -1,6 +1,6 @@
 from django import template
 import datetime
-
+from django_app import models as django_models
 
 register = template.Library()
 
@@ -18,6 +18,18 @@ def text_upper_case(context, text: str):
 def access_tag(context, slug: str):
     user = context["request"].user
     return user.is_authenticated
+
+
+@register.simple_tag(takes_context=True)
+def post_my_rating(context, post_id):
+    """
+    Смотрит, поставил ли я лайк или дизлайк этому посту
+    """
+    user = context["request"].user
+    _post = django_models.PostModel.objects.get(id=post_id)
+    return _post.is_user_post_ratings(user)
+
+
 
 
 @register.simple_tag
