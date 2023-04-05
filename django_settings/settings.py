@@ -57,7 +57,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-p4yrs%2ed=f&=k$es)__pxpow!k^k(vso71elbzn*wfnrevs)s'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -181,9 +181,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = Path(BASE_DIR / 'static')  # todo ENABLE FOR COLLECT STATIC
+# STATIC_ROOT = Path(BASE_DIR / 'static')  # todo ENABLE FOR COLLECT STATIC
 STATICFILES_DIRS = [
-    # Path(BASE_DIR / 'static'),  # todo DISABLE FOR COLLECT STATIC
+    Path(BASE_DIR / 'static'),  # todo DISABLE FOR COLLECT STATIC
     Path(BASE_DIR / 'static_external'),
 ]
 
